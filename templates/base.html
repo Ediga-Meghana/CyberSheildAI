@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CyberShield AI{% endblock %} — Cyberbullying Detection</title>
+    <meta name="description" content="Advanced AI-powered cyberbullying detection system using Hybrid LSTM-SVM framework with multilingual support.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="/" class="nav-brand">
+            <span class="shield-icon">🛡️</span>
+            <span>CyberShield AI</span>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="/" class="{{ 'active' if request.endpoint == 'index' }}">Home</a></li>
+            {% if session.get('user_id') %}
+            <li><a href="/detect" class="{{ 'active' if request.endpoint == 'prediction.detect' }}">Detect</a></li>
+            <li><a href="/dashboard" class="{{ 'active' if request.endpoint == 'analytics.dashboard' }}">Dashboard</a></li>
+            <li><a href="/dataset" class="{{ 'active' if request.endpoint == 'dataset.dataset_page' }}">Dataset</a></li>
+            <li><a href="/admin" class="{{ 'active' if request.endpoint == 'analytics.admin' }}">Admin</a></li>
+            {% endif %}
+        </ul>
+
+        <div class="nav-user">
+            {% if session.get('username') %}
+                <div class="user-badge">
+                    <span class="user-avatar">{{ session.get('username', 'U')[0]|upper }}</span>
+                    <span>{{ session.get('username') }}</span>
+                </div>
+                <a href="/logout" class="btn btn-glass btn-sm">Logout</a>
+            {% else %}
+                <a href="/login" class="btn btn-glass btn-sm">Login</a>
+                <a href="/register" class="btn btn-primary btn-sm">Sign Up</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-messages" id="flashMessages">
+        {% for category, message in messages %}
+        <div class="flash-msg {{ category }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        // Auto-dismiss flash messages
+        setTimeout(() => {
+            const flashMsgs = document.getElementById('flashMessages');
+            if (flashMsgs) {
+                flashMsgs.style.transition = 'opacity 0.5s ease';
+                flashMsgs.style.opacity = '0';
+                setTimeout(() => flashMsgs.remove(), 500);
+            }
+        }, 4000);
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

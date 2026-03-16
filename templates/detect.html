@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}Detect Cyberbullying{% endblock %}
+
+{% block content %}
+<div class="section-header fade-in">
+    <div>
+        <h2>🔍 Real-Time Detection</h2>
+        <p>Paste any text to analyze for cyberbullying content</p>
+    </div>
+</div>
+
+<div class="detect-container">
+    <!-- Input Section -->
+    <div class="text-input-section fade-in">
+        <div class="glass-card">
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" for="inputText">Enter Text</label>
+                <textarea id="inputText" class="form-input" rows="6"
+                    placeholder="Type or paste any social media text, comment, or message here...&#10;&#10;Supports: English, Hindi, Telugu, Spanish, and more"></textarea>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-primary" onclick="analyzeText()" id="analyzeBtn" style="flex: 1;">
+                    🔍 Analyze Text
+                </button>
+                <button class="btn btn-glass" onclick="clearAll()">
+                    🗑️ Clear
+                </button>
+            </div>
+
+            <!-- Sample texts -->
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-glass);">
+                <p
+                    style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Try Sample Texts</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <button class="btn btn-glass btn-sm"
+                        onclick="setSample('You are such a stupid loser nobody likes you')">Harassment</button>
+                    <button class="btn btn-glass btn-sm"
+                        onclick="setSample('I will hurt you if you dont stop talking')">Threat</button>
+                    <button class="btn btn-glass btn-sm"
+                        onclick="setSample('Your kind should not be allowed in this country')">Hate Speech</button>
+                    <button class="btn btn-glass btn-sm"
+                        onclick="setSample('I had a wonderful day at the park with friends')">Safe Text</button>
+                    <button class="btn btn-glass btn-sm"
+                        onclick="setSample('Eres un completo idiota y nadie te quiere')">Spanish</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- History -->
+        <div class="glass-card" style="margin-top: 1.5rem;">
+            <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 1rem;">📜 Recent Predictions</h3>
+            <div id="historyList" style="max-height: 300px; overflow-y: auto;">
+                <p style="color: var(--text-muted); font-size: 0.85rem;">No predictions yet...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Section -->
+    <div class="result-section fade-in">
+        <div id="resultPlaceholder" class="glass-card result-card">
+            <div style="padding: 3rem 0;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🛡️</div>
+                <h3 style="font-size: 1.2rem; color: var(--text-secondary);">Ready to Analyze</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">Enter text and click
+                    Analyze to get started</p>
+            </div>
+        </div>
+
+        <div id="spinner" class="spinner"></div>
+
+        <div id="resultCard" class="glass-card result-card" style="display: none;">
+            <div id="resultIconWrapper">
+                <div id="resultIcon" class="result-icon"></div>
+            </div>
+            <div id="resultPrediction" class="result-prediction"></div>
+            <div id="resultCategory" style="margin-bottom: 1rem;"></div>
+
+            <div class="confidence-bar">
+                <div id="confidenceFill" class="confidence-fill"></div>
+            </div>
+            <p id="confidenceText" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;"></p>
+
+            <div class="result-details" id="resultDetails">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function analyzeText() {
+        const text = document.getElementById('inputText').value.trim();
+        if (!text) {
+            alert('Please enter some text to analyze.');
+            return;
+        }
+
+        const btn = document.getElementById('analyzeBtn');
+        const spinner = document.getElementById('spinner');
+        const placeholder = document.getElementById('resultPlaceholder');
+        const resultCard = document.getElementById('resultCard');
+
+        btn.disabled = true;
+        btn.textContent = '⏳ Analyzing...';
+        spinner.classList.add('active');
+        placeholder.style.display = 'none';
+        resultCard.style.display = 'none';
+
+        fetch('/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text })
+        })
+            .then(res => res.json())
+            .then(data => {
+                spinner.classList.remove('active');
+                btn.disabled = false;
+                btn.textContent = '🔍 Analyze Text';
+
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    placeholder.style.display = 'block';
+                    return;
+                }
+
+                displayResult(data);
+                loadHistory();
+            })
+            .catch(err => {
+                spinner.classList.remove('active');
+                btn.disabled = false;
+                btn.textContent = '🔍 Analyze Text';
+                alert('Request failed: ' + err.message);
+                placeholder.style.display = 'block';
+            });
+    }
+
+    function displayResult(data) {
+        const resultCard = document.getElementById('resultCard');
+        const resultIcon = document.getElementById('resultIcon');
+        const resultPrediction = document.getElementById('resultPrediction');
+        const resultCategory = document.getElementById('resultCategory');
+        const confidenceFill = document.getElementById('confidenceFill');
+        const confidenceText = document.getElementById('confidenceText');
+        const resultDetails = document.getElementById('resultDetails');
+
+        const isDanger = data.prediction === 'Cyberbullying';
+        const confidence = (data.confidence * 100).toFixed(1);
+
+        resultIcon.className = 'result-icon ' + (isDanger ? 'danger' : 'safe');
+        resultIcon.textContent = isDanger ? '⚠️' : '✅';
+
+        resultPrediction.className = 'result-prediction ' + (isDanger ? 'danger' : 'safe');
+        resultPrediction.textContent = data.prediction;
+
+        resultCategory.innerHTML = '<span class="badge ' + (isDanger ? 'badge-danger' : 'badge-safe') + '">' + data.category + '</span>';
+
+        confidenceFill.className = 'confidence-fill ' + (isDanger ? 'danger' : 'safe');
+        confidenceFill.style.width = '0%';
+        setTimeout(() => { confidenceFill.style.width = confidence + '%'; }, 100);
+        confidenceText.textContent = 'Confidence: ' + confidence + '%';
+
+        let detailsHTML = '';
+        detailsHTML += '<div class="detail-item"><div class="label">Category</div><div class="value">' + data.category + '</div></div>';
+        detailsHTML += '<div class="detail-item"><div class="label">Confidence</div><div class="value">' + confidence + '%</div></div>';
+        detailsHTML += '<div class="detail-item"><div class="label">Language</div><div class="value">' + (data.language || 'English') + '</div></div>';
+        detailsHTML += '<div class="detail-item"><div class="label">Status</div><div class="value">' + (isDanger ? '🔴 Detected' : '🟢 Safe') + '</div></div>';
+        if (data.translated_text) {
+            detailsHTML += '<div class="detail-item" style="grid-column: 1/-1;"><div class="label">Translated</div><div class="value">' + data.translated_text + '</div></div>';
+        }
+        resultDetails.innerHTML = detailsHTML;
+
+        resultCard.style.display = 'block';
+        resultCard.style.animation = 'fadeIn 0.5s ease forwards';
+    }
+
+    function setSample(text) {
+        document.getElementById('inputText').value = text;
+    }
+
+    function clearAll() {
+        document.getElementById('inputText').value = '';
+        document.getElementById('resultCard').style.display = 'none';
+        document.getElementById('resultPlaceholder').style.display = 'block';
+    }
+
+    function loadHistory() {
+        fetch('/history')
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('historyList');
+                if (!data.length) {
+                    container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">No predictions yet...</p>';
+                    return;
+                }
+                let html = '';
+                data.slice(0, 10).forEach(item => {
+                    const isDanger = item.prediction === 'Cyberbullying';
+                    html += '<div style="padding: 10px 12px; border-bottom: 1px solid var(--border-glass); display: flex; justify-content: space-between; align-items: center;">';
+                    html += '<span style="font-size: 0.8rem; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary);">' + item.input_text + '</span>';
+                    html += '<span class="badge ' + (isDanger ? 'badge-danger' : 'badge-safe') + '">' + item.prediction + '</span>';
+                    html += '</div>';
+                });
+                container.innerHTML = html;
+            })
+            .catch(() => { });
+    }
+
+    // Load history on page load
+    document.addEventListener('DOMContentLoaded', loadHistory);
+</script>
+{% endblock %}

@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Dataset Management{% endblock %}
+
+{% block content %}
+<div class="section-header fade-in">
+    <div>
+        <h2>📁 Dataset Management</h2>
+        <p>Upload datasets and train the cyberbullying detection model</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+    <!-- Upload Section -->
+    <div class="fade-in">
+        <div class="glass-card">
+            <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1.5rem;">📤 Upload Dataset</h3>
+
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📂</div>
+                <h3>Drop CSV file here or click to upload</h3>
+                <p>Supported formats: CSV, TXT (max 16MB)</p>
+                <p style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--accent-blue);">Required columns: text,
+                    label (0 or 1), category (optional)</p>
+            </div>
+
+            <input type="file" id="fileInput" accept=".csv,.txt" style="display: none;" onchange="uploadFile()">
+
+            <div id="uploadResult" style="display: none; margin-top: 1rem;"></div>
+        </div>
+
+        <!-- Training Section -->
+        <div class="glass-card" style="margin-top: 1.5rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">🧠 Model Training</h3>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem;">
+                Train the hybrid model on uploaded data or generated synthetic data.
+            </p>
+
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-primary" onclick="trainModel()" id="trainBtn">
+                    ⚡ Train on Synthetic Data
+                </button>
+                <button class="btn btn-glass" onclick="trainModel(true)" id="trainDataBtn">
+                    📊 Train on Uploaded Data
+                </button>
+            </div>
+
+            <div id="trainResult" style="display: none; margin-top: 1rem;"></div>
+            <div id="trainSpinner" class="spinner"></div>
+        </div>
+    </div>
+
+    <!-- Info Section -->
+    <div class="fade-in">
+        <div class="glass-card">
+            <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1.5rem;">ℹ️ Dataset Format Guide</h3>
+
+            <div
+                style="background: var(--bg-glass); padding: 1rem; border-radius: var(--radius-xs); margin-bottom: 1rem; border: 1px solid var(--border-glass);">
+                <p style="font-size: 0.8rem; font-weight: 600; color: var(--accent-blue); margin-bottom: 6px;">CSV
+                    Structure</p>
+                <code style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8;">
+                    text,label,category<br>
+                    "You are so stupid",1,Harassment<br>
+                    "Nice weather today",0,Not Bullying<br>
+                    "I will hurt you",1,Threat
+                </code>
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem;">Categories</h4>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="badge badge-safe">0</span>
+                        <span style="font-size: 0.85rem;">Not Bullying</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="badge badge-danger">1</span>
+                        <span style="font-size: 0.85rem;">Harassment</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="badge badge-danger">1</span>
+                        <span style="font-size: 0.85rem;">Threat</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="badge badge-danger">1</span>
+                        <span style="font-size: 0.85rem;">Hate Speech</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="badge badge-danger">1</span>
+                        <span style="font-size: 0.85rem;">Identity Attack</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card" style="margin-top: 1.5rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">🔬 Synthetic Data Details</h3>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.8;">
+                The system generates <strong>1500+ synthetic samples</strong> across 5 categories using template-based
+                text generation. Data augmentation applies:
+            </p>
+            <ul
+                style="margin-top: 0.8rem; padding-left: 1.2rem; color: var(--text-secondary); font-size: 0.85rem; line-height: 2;">
+                <li>SMOTE oversampling for minority classes</li>
+                <li>Synonym replacement via WordNet</li>
+                <li>Random word insertion & shuffling</li>
+                <li>Template variation with suffixes</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Drag & Drop
+    const uploadZone = document.getElementById('uploadZone');
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => { uploadZone.classList.remove('dragover'); });
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            document.getElementById('fileInput').files = e.dataTransfer.files;
+            uploadFile();
+        }
+    });
+
+    function uploadFile() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const resultDiv = document.getElementById('uploadResult');
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = '<p style="color: var(--accent-blue);">⏳ Uploading...</p>';
+
+        fetch('/upload_dataset', {
+            method: 'POST',
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    resultDiv.innerHTML = '<p style="color: var(--accent-red);">❌ ' + data.error + '</p>';
+                } else {
+                    resultDiv.innerHTML = '<div class="badge badge-safe" style="padding: 10px 16px;">✅ ' + data.message + ' (' + data.rows + ' rows)</div>';
+                }
+            })
+            .catch(err => {
+                resultDiv.innerHTML = '<p style="color: var(--accent-red);">❌ Upload failed: ' + err.message + '</p>';
+            });
+    }
+
+    function trainModel(useUploaded = false) {
+        const trainBtn = document.getElementById('trainBtn');
+        const trainDataBtn = document.getElementById('trainDataBtn');
+        const spinner = document.getElementById('trainSpinner');
+        const resultDiv = document.getElementById('trainResult');
+
+        trainBtn.disabled = true;
+        trainDataBtn.disabled = true;
+        spinner.classList.add('active');
+        resultDiv.style.display = 'none';
+
+        const body = useUploaded ? {} : {};
+
+        fetch('/train_model', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        })
+            .then(res => res.json())
+            .then(data => {
+                spinner.classList.remove('active');
+                trainBtn.disabled = false;
+                trainDataBtn.disabled = false;
+                resultDiv.style.display = 'block';
+
+                if (data.error) {
+                    resultDiv.innerHTML = '<p style="color: var(--accent-red);">❌ ' + data.error + '</p>';
+                } else {
+                    const m = data.metrics;
+                    resultDiv.innerHTML = `
+                <div style="background: rgba(16,185,129,0.1); padding: 1rem; border-radius: var(--radius-xs); border: 1px solid rgba(16,185,129,0.2);">
+                    <p style="color: var(--accent-green); font-weight: 600; margin-bottom: 8px;">✅ ${data.message}</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8rem; color: var(--text-secondary);">
+                        <span>Accuracy: <strong>${(m.accuracy * 100).toFixed(1)}%</strong></span>
+                        <span>Precision: <strong>${(m.precision * 100).toFixed(1)}%</strong></span>
+                        <span>Recall: <strong>${(m.recall * 100).toFixed(1)}%</strong></span>
+                        <span>F1: <strong>${(m.f1 * 100).toFixed(1)}%</strong></span>
+                    </div>
+                </div>`;
+                }
+            })
+            .catch(err => {
+                spinner.classList.remove('active');
+                trainBtn.disabled = false;
+                trainDataBtn.disabled = false;
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '<p style="color: var(--accent-red);">❌ Training failed: ' + err.message + '</p>';
+            });
+    }
+</script>
+{% endblock %}

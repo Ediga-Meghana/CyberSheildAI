@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="section-header fade-in">
+    <div>
+        <h2>📊 Analytics Dashboard</h2>
+        <p>Model performance metrics and prediction statistics</p>
+    </div>
+    <button class="btn btn-glass btn-sm" onclick="loadAnalytics()">🔄 Refresh</button>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar fade-in" id="statsBar">
+    <div class="glass-card stat-card">
+        <div class="stat-value" id="totalPredictions">0</div>
+        <div class="stat-label">Total Predictions</div>
+    </div>
+    <div class="glass-card stat-card">
+        <div class="stat-value" id="bullyingCount">0</div>
+        <div class="stat-label">Bullying Detected</div>
+    </div>
+    <div class="glass-card stat-card">
+        <div class="stat-value" id="safeCount">0</div>
+        <div class="stat-label">Safe Messages</div>
+    </div>
+    <div class="glass-card stat-card">
+        <div class="stat-value" id="modelAccuracy">—</div>
+        <div class="stat-label">Model Accuracy</div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="charts-grid fade-in">
+    <!-- Model Metrics -->
+    <div class="glass-card chart-card">
+        <h3>📈 Model Performance Metrics</h3>
+        <div class="chart-container">
+            <canvas id="metricsChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Category Distribution -->
+    <div class="glass-card chart-card">
+        <h3>🎯 Category Distribution</h3>
+        <div class="chart-container">
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Confusion Matrix -->
+    <div class="glass-card chart-card">
+        <h3>🔢 Confusion Matrix</h3>
+        <div class="chart-container">
+            <canvas id="confusionChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Language Distribution -->
+    <div class="glass-card chart-card">
+        <h3>🌍 Language Distribution</h3>
+        <div class="chart-container">
+            <canvas id="languageChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Predictions -->
+<div class="glass-card fade-in" style="margin-top: 1.5rem;">
+    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">📜 Recent Predictions</h3>
+    <div style="overflow-x: auto;">
+        <table class="data-table" id="recentTable">
+            <thead>
+                <tr>
+                    <th>Text</th>
+                    <th>Prediction</th>
+                    <th>Category</th>
+                    <th>Confidence</th>
+                    <th>Language</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody id="recentBody">
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted);">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let metricsChart, categoryChart, confusionChart, languageChart;
+
+    function loadAnalytics() {
+        fetch('/analytics')
+            .then(res => res.json())
+            .then(data => {
+                updateStats(data);
+                updateMetricsChart(data.model_metrics);
+                updateCategoryChart(data.category_distribution);
+                updateConfusionChart(data.model_metrics);
+                updateLanguageChart(data.language_distribution);
+                updateRecentTable(data.recent_predictions);
+            })
+            .catch(err => console.error('Analytics load error:', err));
+    }
+
+    function updateStats(data) {
+        document.getElementById('totalPredictions').textContent = data.total_predictions || 0;
+        document.getElementById('bullyingCount').textContent = data.bullying_count || 0;
+        document.getElementById('safeCount').textContent = data.not_bullying_count || 0;
+        const accuracy = data.model_metrics?.accuracy;
+        document.getElementById('modelAccuracy').textContent = accuracy ? (accuracy * 100).toFixed(1) + '%' : '—';
+    }
+
+    function updateMetricsChart(metrics) {
+        if (!metrics) return;
+        const ctx = document.getElementById('metricsChart').getContext('2d');
+        if (metricsChart) metricsChart.destroy();
+
+        metricsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Accuracy', 'Precision', 'Recall', 'F1 Score', 'ROC-AUC'],
+                datasets: [{
+                    label: 'Score',
+                    data: [
+                        (metrics.accuracy || 0) * 100,
+                        (metrics.precision || 0) * 100,
+                        (metrics.recall || 0) * 100,
+                        (metrics.f1 || 0) * 100,
+                        (metrics.roc_auc || 0) * 100
+                    ],
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.7)',
+                        'rgba(139, 92, 246, 0.7)',
+                        'rgba(16, 185, 129, 0.7)',
+                        'rgba(245, 158, 11, 0.7)',
+                        'rgba(236, 72, 153, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(139, 92, 246, 1)',
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(245, 158, 11, 1)',
+                        'rgba(236, 72, 153, 1)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ctx.parsed.y.toFixed(1) + '%'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: '#94a3b8', callback: v => v + '%' },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
+                    x: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateCategoryChart(categories) {
+        const ctx = document.getElementById('categoryChart').getContext('2d');
+        if (categoryChart) categoryChart.destroy();
+
+        const labels = categories && categories.length ? categories.map(c => c.category || 'Unknown') : ['No Data'];
+        const counts = categories && categories.length ? categories.map(c => c.count) : [1];
+
+        categoryChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.7)',
+                        'rgba(245, 158, 11, 0.7)',
+                        'rgba(139, 92, 246, 0.7)',
+                        'rgba(236, 72, 153, 0.7)',
+                        'rgba(16, 185, 129, 0.7)'
+                    ],
+                    borderColor: 'rgba(10, 14, 26, 1)',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#94a3b8', padding: 15, usePointStyle: true }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateConfusionChart(metrics) {
+        const ctx = document.getElementById('confusionChart').getContext('2d');
+        if (confusionChart) confusionChart.destroy();
+
+        const cm = metrics?.confusion_matrix || [[0, 0], [0, 0]];
+
+        confusionChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['True Neg', 'False Pos', 'False Neg', 'True Pos'],
+                datasets: [{
+                    label: 'Count',
+                    data: [cm[0]?.[0] || 0, cm[0]?.[1] || 0, cm[1]?.[0] || 0, cm[1]?.[1] || 0],
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.7)',
+                        'rgba(239, 68, 68, 0.5)',
+                        'rgba(245, 158, 11, 0.5)',
+                        'rgba(59, 130, 246, 0.7)'
+                    ],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
+                    x: {
+                        ticks: { color: '#94a3b8', font: { size: 11 } },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateLanguageChart(langs) {
+        const ctx = document.getElementById('languageChart').getContext('2d');
+        if (languageChart) languageChart.destroy();
+
+        const langNames = { en: 'English', hi: 'Hindi', te: 'Telugu', es: 'Spanish', ar: 'Arabic', fr: 'French', de: 'German' };
+        const labels = langs && langs.length ? langs.map(l => langNames[l.language] || l.language) : ['No Data'];
+        const counts = langs && langs.length ? langs.map(l => l.count) : [1];
+
+        languageChart = new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.6)',
+                        'rgba(139, 92, 246, 0.6)',
+                        'rgba(6, 182, 212, 0.6)',
+                        'rgba(16, 185, 129, 0.6)',
+                        'rgba(245, 158, 11, 0.6)'
+                    ],
+                    borderColor: 'rgba(10, 14, 26, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#94a3b8', padding: 15, usePointStyle: true }
+                    }
+                },
+                scales: {
+                    r: {
+                        ticks: { display: false },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateRecentTable(predictions) {
+        const tbody = document.getElementById('recentBody');
+        if (!predictions || !predictions.length) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No predictions yet</td></tr>';
+            return;
+        }
+
+        let html = '';
+        predictions.forEach(p => {
+            const isDanger = p.prediction === 'Cyberbullying';
+            const time = p.timestamp ? new Date(p.timestamp).toLocaleString() : '—';
+            html += '<tr>';
+            html += '<td class="text-col">' + p.input_text + '</td>';
+            html += '<td><span class="badge ' + (isDanger ? 'badge-danger' : 'badge-safe') + '">' + p.prediction + '</span></td>';
+            html += '<td><span class="badge badge-purple">' + (p.category || '—') + '</span></td>';
+            html += '<td>' + ((p.confidence || 0) * 100).toFixed(1) + '%</td>';
+            html += '<td>' + (p.language || 'en') + '</td>';
+            html += '<td style="font-size: 0.8rem;">' + time + '</td>';
+            html += '</tr>';
+        });
+        tbody.innerHTML = html;
+    }
+
+    // Load on page ready
+    document.addEventListener('DOMContentLoaded', loadAnalytics);
+</script>
+{% endblock %}

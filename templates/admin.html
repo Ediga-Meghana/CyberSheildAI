@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="section-header fade-in">
+    <div>
+        <h2>⚙️ Admin Panel</h2>
+        <p>System overview, user management, and prediction history</p>
+    </div>
+    <button class="btn btn-glass btn-sm" onclick="loadAdminData()">🔄 Refresh</button>
+</div>
+
+<!-- Tabs -->
+<div class="tabs fade-in">
+    <button class="tab-btn active" onclick="switchTab(this, 'usersTab')">👥 Users</button>
+    <button class="tab-btn" onclick="switchTab(this, 'predictionsTab')">🔍 Predictions</button>
+    <button class="tab-btn" onclick="switchTab(this, 'datasetsTab')">📁 Datasets</button>
+</div>
+
+<!-- Users Tab -->
+<div id="usersTab" class="glass-card fade-in">
+    <div style="overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Joined</th>
+                </tr>
+            </thead>
+            <tbody id="usersBody">
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted);">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Predictions Tab -->
+<div id="predictionsTab" class="glass-card" style="display: none;">
+    <div style="overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Text</th>
+                    <th>Prediction</th>
+                    <th>Category</th>
+                    <th>Confidence</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody id="predictionsBody">
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-muted);">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Datasets Tab -->
+<div id="datasetsTab" class="glass-card" style="display: none;">
+    <div style="overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Dataset Name</th>
+                    <th>Size</th>
+                    <th>Rows</th>
+                    <th>Uploaded By</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="datasetsBody">
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted);">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function switchTab(btn, tabId) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        document.querySelectorAll('[id$="Tab"]').forEach(t => t.style.display = 'none');
+        document.getElementById(tabId).style.display = 'block';
+    }
+
+    function loadAdminData() {
+        fetch('/admin/data')
+            .then(res => res.json())
+            .then(data => {
+                // Users
+                const usersBody = document.getElementById('usersBody');
+                if (data.users && data.users.length) {
+                    usersBody.innerHTML = data.users.map(u => `
+                <tr>
+                    <td>${u.id}</td>
+                    <td style="font-weight: 600;">${u.username}</td>
+                    <td>${u.email}</td>
+                    <td><span class="badge badge-info">${u.role}</span></td>
+                    <td style="font-size: 0.8rem;">${u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}</td>
+                </tr>
+            `).join('');
+                } else {
+                    usersBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No users yet</td></tr>';
+                }
+
+                // Predictions
+                const predsBody = document.getElementById('predictionsBody');
+                if (data.predictions && data.predictions.length) {
+                    predsBody.innerHTML = data.predictions.map(p => {
+                        const isDanger = p.prediction === 'Cyberbullying';
+                        return `
+                <tr>
+                    <td>${p.id}</td>
+                    <td style="font-weight: 500;">${p.username || '—'}</td>
+                    <td class="text-col">${p.input_text}</td>
+                    <td><span class="badge ${isDanger ? 'badge-danger' : 'badge-safe'}">${p.prediction}</span></td>
+                    <td><span class="badge badge-purple">${p.category || '—'}</span></td>
+                    <td>${((p.confidence || 0) * 100).toFixed(1)}%</td>
+                    <td style="font-size: 0.8rem;">${p.timestamp ? new Date(p.timestamp).toLocaleString() : '—'}</td>
+                </tr>`;
+                    }).join('');
+                } else {
+                    predsBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No predictions yet</td></tr>';
+                }
+
+                // Datasets
+                const dsBody = document.getElementById('datasetsBody');
+                if (data.datasets && data.datasets.length) {
+                    dsBody.innerHTML = data.datasets.map(d => `
+                <tr>
+                    <td>${d.id}</td>
+                    <td style="font-weight: 500;">${d.dataset_name}</td>
+                    <td>${formatBytes(d.size)}</td>
+                    <td>${d.num_rows || '—'}</td>
+                    <td>${d.username || '—'}</td>
+                    <td style="font-size: 0.8rem;">${d.upload_date ? new Date(d.upload_date).toLocaleDateString() : '—'}</td>
+                </tr>
+            `).join('');
+                } else {
+                    dsBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No datasets uploaded</td></tr>';
+                }
+            })
+            .catch(err => console.error('Admin data load error:', err));
+    }
+
+    function formatBytes(bytes) {
+        if (!bytes) return '—';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAdminData);
+</script>
+{% endblock %}

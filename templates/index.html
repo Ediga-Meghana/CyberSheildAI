@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero fade-in">
+    <div class="hero-badge">
+        🤖 Powered by Hybrid LSTM + SVM
+    </div>
+    <h1>
+        Stop <span class="highlight">Cyberbullying</span><br>
+        With AI Detection
+    </h1>
+    <p>
+        Advanced hybrid machine learning framework combining LSTM deep learning with SVM classification
+        and TF-IDF features to detect cyberbullying in social media text — with multilingual support.
+    </p>
+    <div class="hero-actions">
+        {% if session.get('user_id') %}
+        <a href="/detect" class="btn btn-primary">🔍 Analyze Text</a>
+        <a href="/dashboard" class="btn btn-glass">📊 View Dashboard</a>
+        {% else %}
+        <a href="/register" class="btn btn-primary">🚀 Get Started</a>
+        <a href="/login" class="btn btn-glass">🔑 Login</a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Features -->
+<section class="features-grid">
+    <div class="glass-card feature-card fade-in">
+        <div class="feature-icon blue">🧠</div>
+        <h3>Hybrid LSTM + SVM</h3>
+        <p>Combines deep learning contextual features with classical SVM classification for superior accuracy.</p>
+    </div>
+    <div class="glass-card feature-card fade-in">
+        <div class="feature-icon purple">📊</div>
+        <h3>TF-IDF Character N-grams</h3>
+        <p>Character-level features detect slang, misspellings, and obfuscated abusive language patterns.</p>
+    </div>
+    <div class="glass-card feature-card fade-in">
+        <div class="feature-icon cyan">🌍</div>
+        <h3>Multilingual Support</h3>
+        <p>Detects cyberbullying in English, Hindi, Telugu, Spanish with auto-translation pipeline.</p>
+    </div>
+    <div class="glass-card feature-card fade-in">
+        <div class="feature-icon green">⚖️</div>
+        <h3>SMOTE + Augmentation</h3>
+        <p>Synthetic oversampling and NLP augmentation overcome minority class recall challenges.</p>
+    </div>
+    <div class="glass-card feature-card fade-in">
+        <div class="feature-icon pink">⚡</div>
+        <h3>Real-Time Detection</h3>
+        <p>Instant text analysis with confidence scoring and category classification results.</p>
+    </div>
+    <div class="glass-card feature-card fade-in">
+        <div class="feature-icon orange">📈</div>
+        <h3>Analytics Dashboard</h3>
+        <p>Interactive charts for accuracy, recall, F1-score, confusion matrix, and prediction history.</p>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section style="margin-top: 3rem;">
+    <div class="stats-bar">
+        <div class="glass-card stat-card fade-in">
+            <div class="stat-value">95%+</div>
+            <div class="stat-label">Accuracy</div>
+        </div>
+        <div class="glass-card stat-card fade-in">
+            <div class="stat-value">5</div>
+            <div class="stat-label">Categories</div>
+        </div>
+        <div class="glass-card stat-card fade-in">
+            <div class="stat-value">4+</div>
+            <div class="stat-label">Languages</div>
+        </div>
+        <div class="glass-card stat-card fade-in">
+            <div class="stat-value">&lt;1s</div>
+            <div class="stat-label">Response Time</div>
+        </div>
+    </div>
+</section>
+
+<!-- IEEE Improvements -->
+<section style="margin-top: 2rem;">
+    <div class="section-header">
+        <div>
+            <h2>🔬 IEEE Research Improvements</h2>
+            <p>Addressing key limitations identified in existing research</p>
+        </div>
+    </div>
+    <div class="features-grid">
+        <div class="glass-card feature-card">
+            <h3 style="color: var(--accent-green);">✅ Minority Class Recall</h3>
+            <p>SMOTE oversampling + synonym replacement + template-based synthetic data generation ensures balanced
+                training and high recall for underrepresented categories.</p>
+        </div>
+        <div class="glass-card feature-card">
+            <h3 style="color: var(--accent-blue);">✅ Computational Efficiency</h3>
+            <p>Bidirectional LSTM with early stopping, batch training, and optimized TF-IDF pipeline delivers fast
+                training even on CPU hardware.</p>
+        </div>
+        <div class="glass-card feature-card">
+            <h3 style="color: var(--accent-purple);">✅ Multilingual Support</h3>
+            <p>Automatic language detection via langdetect with deep-translator pipeline extends detection to Hindi,
+                Telugu, Spanish and more.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
