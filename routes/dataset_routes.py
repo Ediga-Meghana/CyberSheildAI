@@ -91,12 +91,18 @@ def train_model():
                 texts = df['text'].tolist() if 'text' in df.columns else df.iloc[:, 0].tolist()
                 labels = df['label'].tolist() if 'label' in df.columns else df.iloc[:, 1].tolist()
                 categories = df['category'].tolist() if 'category' in df.columns else [None] * len(texts)
-                metrics = model.train(texts, labels, categories)
+                if model:
+                    metrics = model.train(texts, labels, categories)
+                else:
+                    return jsonify({'error': 'Model not initialized.'}), 500
             else:
                 return jsonify({'error': 'Dataset not found.'}), 404
         else:
             # Train on synthetic data
-            metrics = model.train()
+            if model:
+                metrics = model.train()
+            else:
+                return jsonify({'error': 'Model not initialized.'}), 500
 
         return jsonify({
             'message': 'Model trained successfully!',

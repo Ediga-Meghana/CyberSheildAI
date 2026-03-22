@@ -15,7 +15,7 @@ from routes.auth_routes import auth_bp
 from routes.prediction_routes import prediction_bp, init_model as init_pred_model
 from routes.dataset_routes import dataset_bp, init_model as init_dataset_model
 from routes.analytics_routes import analytics_bp, init_model as init_analytics_model
-from models.advanced_model import AdvancedModel
+from models.multilingual_model import MultilingualModel
 from utils.limiter import limiter
 
 
@@ -37,9 +37,9 @@ def create_app():
     os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
 
     # Initialize ML model
-    model = AdvancedModel()
+    model = MultilingualModel()
     if not model.load():
-        print("[WARN] No Advanced Model found. Please run 'python train_advanced.py' prior to predicting.")
+        print("[WARN] Failed to load Multilingual Model.")
 
     # Inject model into route modules
     init_pred_model(model)

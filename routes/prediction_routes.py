@@ -2,7 +2,6 @@ import logging
 from flask import Blueprint, request, jsonify, session, render_template, flash, redirect, url_for
 from database import insert_db, query_db
 from utils.language_detector import detect_language, SUPPORTED_LANGUAGES
-from utils.translator import translate_to_english
 from utils.limiter import limiter
 
 prediction_bp = Blueprint('prediction', __name__)
@@ -49,10 +48,8 @@ def predict():
     else:
         lang_code, lang_name = detect_language(text)
 
-    # Translate if not English
+    # Direct processing without translation for multilingual model
     processed_text = text
-    if lang_code != 'en':
-        processed_text = translate_to_english(text, source_lang=lang_code)
 
     # Predict
     try:
