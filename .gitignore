@@ -1,33 +1,28 @@
-# Python
 __pycache__/
 *.py[cod]
-*.pyo
-*.egg-info/
-dist/
-build/
-*.egg
+*$py.class
 
-# Virtual environment
-venv/
-env/
+# Environment
 .env
+.venv
+env/
+venv/
+ENV/
 
-# Database
-database/
-*.db
+# Jupyter
+.ipynb_checkpoints
 
-# Saved models (too large for git)
+# Logs
+*.log
+output.log
+app_error.txt
+
+# Saved Models
 saved_models/
+*.h5
+*.pkl
+*.joblib
 
-# Uploaded datasets
-datasets/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
+# Local scripts
+test_app.py
+check_app.py

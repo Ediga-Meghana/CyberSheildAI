@@ -14,6 +14,21 @@
     <div class="text-input-section fade-in">
         <div class="glass-card">
             <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" for="langSelect">Language</label>
+                <select id="langSelect" class="form-input" style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--border-glass); border-radius: 8px;">
+                    <option value="auto" style="color: black;">Auto Detect Language</option>
+                    <option value="en" style="color: black;">English</option>
+                    <option value="hi" style="color: black;">Hindi</option>
+                    <option value="te" style="color: black;">Telugu</option>
+                    <option value="ta" style="color: black;">Tamil</option>
+                    <option value="kn" style="color: black;">Kannada</option>
+                    <option value="ml" style="color: black;">Malayalam</option>
+                    <option value="bn" style="color: black;">Bengali</option>
+                    <option value="mr" style="color: black;">Marathi</option>
+                    <option value="ur" style="color: black;">Urdu</option>
+                    <option value="es" style="color: black;">Spanish</option>
+                </select>
+
                 <label class="form-label" for="inputText">Enter Text</label>
                 <textarea id="inputText" class="form-input" rows="6"
                     placeholder="Type or paste any social media text, comment, or message here...&#10;&#10;Supports: English, Hindi, Telugu, Spanish, and more"></textarea>
@@ -83,6 +98,11 @@
 
             <div class="result-details" id="resultDetails">
             </div>
+
+            <div id="explanationSection" class="mt-4 p-4 rounded-lg bg-black/20 hidden border border-white/10 text-left">
+                <h4 class="text-sm font-semibold text-gray-300 mb-2">🧠 LIME Explainability (Key Words)</h4>
+                <div id="explanationWords" class="flex flex-wrap gap-2"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -101,6 +121,7 @@
         const spinner = document.getElementById('spinner');
         const placeholder = document.getElementById('resultPlaceholder');
         const resultCard = document.getElementById('resultCard');
+        const lang = document.getElementById('langSelect').value;
 
         btn.disabled = true;
         btn.textContent = '⏳ Analyzing...';
@@ -111,7 +132,7 @@
         fetch('/predict', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: text })
+            body: JSON.stringify({ text: text, language: lang })
         })
             .then(res => res.json())
             .then(data => {
@@ -171,6 +192,25 @@
             detailsHTML += '<div class="detail-item" style="grid-column: 1/-1;"><div class="label">Translated</div><div class="value">' + data.translated_text + '</div></div>';
         }
         resultDetails.innerHTML = detailsHTML;
+
+        // Display LIME Explanations
+        const explanationSection = document.getElementById('explanationSection');
+        const explanationWords = document.getElementById('explanationWords');
+        
+        if (data.explanation && data.explanation.length > 0) {
+            let expHtml = '';
+            data.explanation.forEach(item => {
+                const word = item[0];
+                const weight = item[1];
+                const isDangerWord = weight > 0;
+                const colorClass = isDangerWord ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-green-500/20 text-green-300 border-green-500/30';
+                expHtml += `<span class="px-2 py-1 rounded text-xs border ${colorClass}">${word} (${weight > 0 ? '+' : ''}${weight.toFixed(3)})</span>`;
+            });
+            explanationWords.innerHTML = expHtml;
+            explanationSection.classList.remove('hidden');
+        } else {
+            explanationSection.classList.add('hidden');
+        }
 
         resultCard.style.display = 'block';
         resultCard.style.animation = 'fadeIn 0.5s ease forwards';

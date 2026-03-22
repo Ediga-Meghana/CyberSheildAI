@@ -7,10 +7,13 @@ SUPPORTED_LANGUAGES = {
     'en': 'English',
     'hi': 'Hindi',
     'te': 'Telugu',
+    'ta': 'Tamil',
+    'kn': 'Kannada',
+    'ml': 'Malayalam',
+    'bn': 'Bengali',
+    'mr': 'Marathi',
+    'ur': 'Urdu',
     'es': 'Spanish',
-    'ar': 'Arabic',
-    'fr': 'French',
-    'de': 'German',
 }
 
 

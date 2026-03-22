@@ -1,4 +1,6 @@
 import re
+import unicodedata
+import emoji
 
 # Built-in English stop words — no NLTK download needed
 STOP_WORDS = {
@@ -45,18 +47,7 @@ def remove_urls(text):
 
 
 def remove_emojis(text):
-    emoji_pattern = re.compile(
-        "["
-        u"\U0001F600-\U0001F64F"
-        u"\U0001F300-\U0001F5FF"
-        u"\U0001F680-\U0001F6FF"
-        u"\U0001F1E0-\U0001F1FF"
-        u"\U00002702-\U000027B0"
-        u"\U000024C2-\U0001F251"
-        "]+",
-        flags=re.UNICODE
-    )
-    return emoji_pattern.sub(r'', text)
+    return emoji.replace_emoji(text, replace='')
 
 
 def remove_mentions_hashtags(text):
@@ -83,12 +74,16 @@ def clean_text(text):
     """Full preprocessing pipeline — zero external downloads needed."""
     if not isinstance(text, str):
         return ''
+    
+    # Normalize unicode (very important for Hindi, Telugu, etc.)
+    text = unicodedata.normalize('NFKC', text)
+    
     text = text.lower()
     text = remove_urls(text)
     text = remove_emojis(text)
     text = remove_mentions_hashtags(text)
     text = remove_special_characters(text)
     text = remove_stopwords(text)
-    text = lemmatize_text(text)
+    # text = lemmatize_text(text) # Commenting out lemmatization as transformer models prefer intact words
     text = re.sub(r'\s+', ' ', text).strip()
     return text

@@ -1,74 +1,63 @@
-# CyberShield AI — Cyberbullying Detection System
+# CyberShield AI 🛡️
 
-<div align="center">
-  <img src="https://img.shields.io/badge/Python-3.8+-blue.svg" alt="Python Version">
-  <img src="https://img.shields.io/badge/Flask-3.0.0-green.svg" alt="Flask">
-  <img src="https://img.shields.io/badge/Framework-Hybrid%20LSTM%2BSVM-orange.svg" alt="ML Framework">
-  <img src="https://img.shields.io/badge/UI-Dark%20Glassmorphism-magenta.svg" alt="UI Theme">
-</div>
+CyberShield AI is an advanced, multilingual cyberbullying and toxic text detection engine. It leverages state-of-the-art Natural Language Processing (NLP) techniques, particularly HuggingFace Transformers, to classify text across 10 different native languages. 
 
-<br>
+## Features ✨
 
-CyberShield AI is a state-of-the-art, production-ready web application that detects cyberbullying in social media text across multiple languages. It implements an advanced research-based architecture combining deep learning and classical machine learning to provide accurate, real-time predictions.
+* **Advanced NLP Pipeline**: Powered by `bert-base-multilingual-cased` for robust, context-aware sequence classification.
+* **Massive Multilingual Support**: Detects and translates English, Hindi, Telugu, Tamil, Kannada, Malayalam, Bengali, Marathi, Urdu, and Spanish text dynamically.
+* **Dynamic Explainability**: Integrated **LIME** (Local Interpretable Model-Agnostic Explanations) UI to highlight exactly *which* words triggered the AI's detection protocols.
+* **Modern Web Interface**: Glassmorphism UI fully modernized with Tailwind CSS grids and micro-interactions.
+* **Security & Performance**: Backend protected by `Flask-Limiter` to prevent DDoS against heavy AI endpoints. Model loading is cached for runtime efficiency.
 
-## 🚀 Features
+## Architecture 🏗️
 
-- **Hybrid ML Architecture**: Combines Bi-directional LSTM for deep contextual feature extraction and SVM for robust classification.
-- **Multilingual Support**: Automatically detects and analyzes text in English, Hindi, Telugu, Spanish, and more.
-- **Synthetic Data Generation**: Overcomes dataset imbalance (a common IEEE research limitation) using SMOTE, NLP augmentation, and template-based text generation to improve minority class recall.
-- **Real-Time Detection**: Paste or type any text to instantly see the prediction, sub-category, and confidence score.
-- **Analytics Dashboard**: Interactive Chart.js visualizations covering model accuracy, recall, F1-scores, confusion matrix, and prediction history.
-- **Modern UI**: A sleek, dark-themed glassmorphism interface with smooth animations and responsive design.
-- **Dataset Management**: Upload custom CSV datasets and trigger on-demand model training.
+```mermaid
+graph TD;
+    A[User Input] --> B(Flask Web Server);
+    B --> C{Language Detector};
+    C -- Native --> D[Text Normalizer / Emoji Cleaner];
+    C -- Translated --> D;
+    D --> E[Advanced BERT Transformer];
+    E --> F[Cyberbullying AI Prediction];
+    F --> G[LIME Explainer Generator];
+    G --> H[Tailwind JSON UI Render];
+```
 
-## 📌 Addressed Research Limitations
-This project specifically addresses common drawbacks found in IEEE research papers regarding cyberbullying detection:
-1. **Minority Class Recall**: Solved via 50/50 balanced synthetic data generation and targeted minority-class augmentation (synonym replacement, etc.).
-2. **Computational Efficiency**: Optimizes training using a lightweight extraction pipeline and early stopping, allowing the model to train in seconds even on CPU.
-3. **Multilingual Applicability**: Integrates `langdetect` and `deep-translator` to expand detection capabilities beyond English.
+## Setup Instructions 🚀
 
-## 🛠️ Technology Stack
-- **Frontend**: HTML5, Vanilla CSS3 (Glassmorphism), JavaScript, Chart.js
-- **Backend & API**: Python, Flask, SQLite
-- **Machine Learning**: TensorFlow/Keras (BiLSTM), Scikit-Learn (SVM, Logistic Regression), NLTK, Imbalanced-Learn
-- **NLP Utilities**: TF-IDF (Character N-grams), deep-translator, langdetect
+### 1. Prerequisites
+- **Python 3.10+** (Required for TF/Transformer optimizations)
+- Optional: NVIDIA GPU + CUDA for significantly faster training and evaluation.
 
-## ⚙️ Installation & Usage
+### 2. Local Installation
+```bash
+# Clone the repository
+git clone https://github.com/Ediga-Meghana/CyberSheildAI.git
+cd CyberSheildAI
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Ediga-Meghana/cyberAI.git
-   cd cyberAI
-   ```
+# Install all dependencies
+pip install -r requirements.txt
+```
 
-2. **Install requirements:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-   *Note: NLTK dependencies are handled internally through built-in alternatives to prevent Windows download issues.*
+### 3. Running the Server
 
-3. **Run the Flask server:**
-   ```bash
-   python app.py
-   ```
-   *Note: The first time you run this, the system will automatically generate a balanced synthetic dataset and train the hybrid model.*
+Start the local Flask server on port 5000:
+```bash
+python app.py
+```
+*Navigate to [http://localhost:5000](http://localhost:5000) to access the CyberShield UI.*
 
-4. **Access the application:**
-   Open your browser and navigate to: `http://127.0.0.1:5000`
+## Deployment ☁️
+This application contains a `Dockerfile` and is completely containerization-ready.
+```bash
+docker build -t cybershield-ai .
+docker run -p 5000:5000 cybershield-ai
+```
 
-## 🧪 Testing
-
-You can use the built-in system without an external dataset.
-- Register a new account or use the test credentials if you set them up.
-- Go to the **Detect** page and try pasting common examples of safe text or bullying text (e.g., Harassment, Hate Speech, Threats).
-
-## 🗂️ Project Structure
-- `/models`: Contains the Hybrid LSTM+SVM logic.
-- `/preprocessing`: Text cleaning, tokenization, and character-level TF-IDF extraction.
-- `/routes`: Flask blueprint routes (auth, prediction, analytics, dataset).
-- `/synthetic`: Custom data generator and NLP augmentation engines.
-- `/static/css`: Custom UI styles (`style.css`).
-- `/templates`: HTML pages.
-
-## 📄 License
-This project is for educational and research demonstration purposes.
+## File Structure 📂
+* `app.py`: Core application logic and model caching
+* `models/advanced_model.py`: Modularized HF Transformer classification architecture
+* `train_advanced.py`: Script executing structural dataset 70/15/15 splits and performing GridSearchCV hyperparameter evaluation
+* `preprocessing/`: Scripts to resolve Unicode issues and clean emojis natively
+* `routes/`: Expressive API endpoints for Predictions and Analytics

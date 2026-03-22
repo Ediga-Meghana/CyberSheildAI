@@ -1,6 +1,10 @@
 import os
 import sys
 
+# Crucial bounds for TF stability on various machines
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -11,7 +15,8 @@ from routes.auth_routes import auth_bp
 from routes.prediction_routes import prediction_bp, init_model as init_pred_model
 from routes.dataset_routes import dataset_bp, init_model as init_dataset_model
 from routes.analytics_routes import analytics_bp, init_model as init_analytics_model
-from models.hybrid_model import HybridModel
+from models.advanced_model import AdvancedModel
+from utils.limiter import limiter
 
 
 def create_app():
@@ -24,15 +29,17 @@ def create_app():
     # Initialize database
     init_db()
 
+    # Initialize rate limiter
+    limiter.init_app(app)
+
     # Create necessary directories
     os.makedirs(Config.SAVED_MODELS_DIR, exist_ok=True)
     os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
 
     # Initialize ML model
-    model = HybridModel()
+    model = AdvancedModel()
     if not model.load():
-        print("[INFO] No saved model found. Training on synthetic data...")
-        model.train()
+        print("[WARN] No Advanced Model found. Please run 'python train_advanced.py' prior to predicting.")
 
     # Inject model into route modules
     init_pred_model(model)
