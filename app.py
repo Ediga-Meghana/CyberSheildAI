@@ -15,7 +15,7 @@ from routes.auth_routes import auth_bp
 from routes.prediction_routes import prediction_bp, init_model as init_pred_model
 from routes.dataset_routes import dataset_bp, init_model as init_dataset_model
 from routes.analytics_routes import analytics_bp, init_model as init_analytics_model
-from models.multilingual_model import MultilingualModel
+from models.hybrid_model import HybridModel
 from utils.limiter import limiter
 
 
@@ -37,9 +37,9 @@ def create_app():
     os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
 
     # Initialize ML model
-    model = MultilingualModel()
+    model = HybridModel()
     if not model.load():
-        print("[WARN] Failed to load Multilingual Model.")
+        print("[WARN] Failed to load Hybrid Model. Predictions will fail until trained.")
 
     # Inject model into route modules
     init_pred_model(model)

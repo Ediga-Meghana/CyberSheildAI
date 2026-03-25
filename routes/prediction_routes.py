@@ -25,10 +25,9 @@ def detect():
     return render_template('detect.html')
 
 @prediction_bp.route('/predict', methods=['POST'])
-@limiter.limit("10 per minute")
+@limiter.limit("50 per minute")
 def predict():
-    if 'user_id' not in session:
-        return jsonify({'error': 'Unauthorized. Please log in.'}), 401
+    # Public access: No session check required
 
     data = request.get_json()
     if not data or 'text' not in data:
@@ -53,10 +52,12 @@ def predict():
 
     # Predict
     try:
+        logger.info(f"Processing text: {processed_text}")
         result = model.predict(processed_text)
+        logger.info(f"Prediction raw result: {result}")
         
         # Explainability (Bonus)
-        if getattr(model, 'is_trained', False) and getattr(model, 'model', None) is not None:
+        if getattr(model, 'is_trained', False) and getattr(model, 'svm', None) is not None:
             # Mock explanation for UI Preview without LIME
             words = processed_text.split()
             mock_exp = []
@@ -68,17 +69,18 @@ def predict():
             result['explanation'] = []
             
     except Exception as e:
-        logger.error(f"Prediction failed for user {session['user_id']}: {str(e)}")
+        logger.error(f"Prediction failed for user {session.get('user_id', 'unknown')}: {str(e)}", exc_info=True)
         return jsonify({'error': f'Prediction failed: {str(e)}'}), 500
 
     # Logging predictions for future retraining (Bonus)
-    logger.info(f"PREDICTION_LOG | user_id:{session['user_id']} | text:'{text}' | pred:{result['prediction']} | conf:{result['confidence']} | lang:{lang_code}")
+    user_id = session.get('user_id', -1) # -1 or None for anonymous public users
+    logger.info(f"PREDICTION_LOG | user_id:{user_id} | text:'{text}' | pred:{result['prediction']} | conf:{result['confidence']} | lang:{lang_code}")
 
     # Save to database
     # Assuming the table structure remains mostly same. 
     insert_db(
         'INSERT INTO predictions (user_id, input_text, prediction, category, confidence, language) VALUES (?, ?, ?, ?, ?, ?)',
-        (session['user_id'], text, result['prediction'], result['category'], result['confidence'], lang_code)
+        (user_id, text, result['prediction'], result['category'], result['confidence'], lang_code)
     )
 
     result['language'] = lang_name
