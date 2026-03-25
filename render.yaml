@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: cybershield-ai
+    env: docker
+    plan: free # Note: free tier has 512MB RAM, might be tight for ML models. 
+    dockerCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 app:app
+    envVars:
+      - key: PORT
+        value: 10000
+    autoDeploy: true
