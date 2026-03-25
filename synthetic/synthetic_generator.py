@@ -9,13 +9,27 @@ class SyntheticDataGenerator:
     INSULTS = [
         'stupid', 'idiot', 'moron', 'loser', 'ugly', 'dumb', 'worthless',
         'pathetic', 'disgusting', 'terrible', 'horrible', 'awful', 'useless',
-        'fool', 'clown', 'trash', 'garbage', 'freak', 'weirdo', 'creep'
+        'fool', 'clown', 'trash', 'garbage', 'freak', 'weirdo', 'creep',
+        # Hindi (Roman & Native)
+        'pagal', 'bewakoof', 'gadha', 'kutta', 'madarchod', 'bhonsdike', 'chutiya',
+        'पागल', 'बेवकूफ', 'कुत्ता',
+        # Telugu (Roman & Native)
+        'picha', 'kothi', 'kukkala', 'erri', 'santhi', 'vedhava',
+        'పిచ్చి', 'కోతి', 'కుక్క',
+        # Other (Tamil, Kannada, etc.)
+        'muttaal', 'pithukuli', 'loosu', 'kacha'
     ]
 
     THREAT_WORDS = [
         'hurt you', 'destroy you', 'ruin your life', 'beat you up',
         'come after you', 'make you pay', 'get you', 'watch your back',
-        'regret this', 'suffer', 'pay for this', 'end you'
+        'regret this', 'suffer', 'pay for this', 'end you',
+        # Hindi
+        'maar dunga', 'jaan se maar', 'dekh lunga', 'chodunga nahi',
+        'मार दूंगा', 'खत्म कर दूंगा',
+        # Telugu
+        'sampestha', 'pogestha', 'kottesi', 'narikestha',
+        'చంపేస్తా', 'కొడతా'
     ]
 
     HATE_TERMS = [
@@ -23,7 +37,11 @@ class SyntheticDataGenerator:
         'your kind is not welcome', 'people like you are the problem',
         'you are a disgrace to society', 'your type should not exist',
         'nobody wants your kind around', 'you are inferior',
-        'your culture is backwards'
+        'your culture is backwards',
+        # Hindi
+        'tum log aise hi ho', 'yahan se jao', 'nikal yahan se',
+        # Telugu
+        'mee vallu inthe', 'ikkada nunchi vellipo', 'mi brathukulu inthe'
     ]
 
     HARASSMENT_TEMPLATES = [
@@ -34,14 +52,11 @@ class SyntheticDataGenerator:
         "You will always be a {insult}",
         "I cant believe how {insult} you are",
         "What a {insult} person you are",
-        "You are the most {insult} person I know",
-        "Looking {insult} as always",
-        "Why are you so {insult} all the time",
-        "Wow you really are {insult}",
-        "Just admit it you are {insult}",
-        "Do everyone a favor and stop being {insult}",
-        "You {insult} piece of work",
-        "Such a {insult} thing to say from a {insult} person",
+        "Tu kitna {insult} hai",               # Hindi
+        "Nuvvu pedda {insult} vi",            # Telugu
+        "Neeyellam oru {insult} da",          # Tamil
+        "Tum bilkul {insult} ho yar",         # Mixed
+        "Mirenta {insult} asalu",             # Telugu
     ]
 
     THREAT_TEMPLATES = [
@@ -50,11 +65,10 @@ class SyntheticDataGenerator:
         "Keep talking and I will {threat}",
         "One more word and I will {threat}",
         "You are going to {threat}",
-        "I swear I will {threat}",
-        "Dont test me I will {threat}",
-        "Keep it up and you will {threat}",
-        "Im going to {threat}",
-        "You deserve to {threat}",
+        "Main tujhe {threat}",                # Hindi
+        "Ninnu nenu {threat}",                # Telugu
+        "Aukat mein reh warna {threat}",      # Hindi
+        "Entra ekuva chesthunnav {threat}",   # Telugu
     ]
 
     HATE_TEMPLATES = [
@@ -65,6 +79,8 @@ class SyntheticDataGenerator:
         "The truth is {hate}",
         "Wake up {hate}",
         "Fact is {hate}",
+        "Sach to yeh hai ki {hate}",          # Hindi
+        "Nijam entante {hate}",               # Telugu
     ]
 
     IDENTITY_ATTACK_TEMPLATES = [
@@ -74,13 +90,14 @@ class SyntheticDataGenerator:
         "{group} are ruining everything",
         "The world would be better without {group}",
         "{group} are all {insult}",
-        "Typical {group} behavior being {insult}",
-        "Of course you are {insult} because you are {group}",
+        "Yeh sab {group} {insult} hote hain", # Hindi
+        "Aa {group} antha {insult} gaallu",   # Telugu
     ]
 
     GROUPS = [
         'those people', 'outsiders', 'that community', 'your group',
-        'newcomers', 'them', 'their kind', 'that crowd'
+        'newcomers', 'them', 'their kind', 'that crowd',
+        'ye log', 'woh log', 'vallu', 'aa janam'
     ]
 
     NOT_BULLYING_TEMPLATES = [
@@ -88,42 +105,17 @@ class SyntheticDataGenerator:
         "The weather is really nice outside",
         "I love reading books about science",
         "Just finished my homework it was easy",
-        "Going to the park with friends later",
-        "This movie was really entertaining",
-        "Happy birthday to my best friend",
-        "I learned something new in class today",
-        "The sunset looks beautiful tonight",
-        "Just cooked a delicious meal for dinner",
-        "Excited about the upcoming school trip",
-        "My dog is the cutest ever",
-        "Reading a great novel right now",
-        "The concert last night was amazing",
-        "I appreciate all the help you gave me",
-        "Congratulations on your achievement",
-        "What a wonderful performance by the team",
-        "Thank you for being such a good friend",
-        "Lets work together on this project",
-        "Hope everyone has an awesome weekend",
-        "The garden looks wonderful this spring",
-        "Really enjoyed the presentation today",
-        "Great job on the report everyone",
-        "This restaurant has delicious food",
-        "Looking forward to the holidays",
-        "I passed my exam with flying colors",
-        "My family had a wonderful reunion",
-        "The new game release is fantastic",
-        "Such a peaceful morning today",
-        "I donated to charity this weekend",
-        "The library has a great collection",
-        "Just started learning a new language",
-        "My painting turned out really well",
-        "The school play was a huge success",
-        "I love spending time with my family",
-        "Technology is advancing so rapidly",
-        "The museum exhibit was fascinating",
-        "Just completed a five kilometer run",
-        "The flowers in the garden are blooming",
-        "I am grateful for all my blessings",
+        "Aaj ka din bahut acha tha",            # Hindi
+        "Mausam bahut suhana hai",              # Hindi
+        "Eeroju chala bagundi",                 # Telugu
+        "Bhojanam chala bagundi",               # Telugu
+        "Romba nalla irukku",                   # Tamil
+        "Today was amazing",
+        "Me gusta mucho esta pelicula",         # Spanish
+        "Es un buen dia",                       # Spanish
+        "Mala far aavdla",                      # Marathi
+        "Khoob bhalo royeche",                  # Bengali
+        "Nange tumba ishta aayithu",            # Kannada
     ]
 
     def __init__(self, seed=42):

@@ -37,14 +37,36 @@ class HybridModel:
         return [clean_text(t) for t in texts]
 
     def train(self, texts=None, labels=None, categories=None):
-        """Train the hybrid model. Uses synthetic data if none provided."""
+        """Train the hybrid model combining real and synthetic multilingual data."""
+        import pandas as pd
         if texts is None or labels is None:
-            print("[INFO] No dataset provided. Generating synthetic data...")
-            gen = SyntheticDataGenerator(seed=42)
-            df = gen.generate_dataset(total_size=2000)
-            texts = df['text'].tolist()
-            labels = df['label'].tolist()
-            categories = df['category'].tolist()
+            texts, labels, categories = [], [], []
+
+        print("[INFO] Generating multilingual synthetic data...")
+        gen = SyntheticDataGenerator(seed=42)
+        df_syn = gen.generate_dataset(total_size=3000)
+        syn_texts = df_syn['text'].tolist()
+        syn_labels = df_syn['label'].tolist()
+        syn_cats = df_syn['category'].tolist()
+
+        try:
+            print("[INFO] Loading real dataset...")
+            df_real = pd.read_csv('datasets/labeled_data.csv')
+            real_texts = df_real['tweet'].dropna().tolist()
+            # Map class 0 (hate), 1 (offensive) -> 1 (Bullying); class 2 (neither) -> 0 (Not Bullying)
+            real_labels = [1 if int(c) in [0, 1] else 0 for c in df_real['class'].dropna().tolist()]
+            real_cats = ['Hate Speech' if l == 1 else 'Not Bullying' for l in real_labels]
+            
+            # Combine real and synthetic
+            texts = texts + real_texts + syn_texts
+            labels = labels + real_labels + syn_labels
+            categories = categories + real_cats + syn_cats
+            print(f"[INFO] Successfully loaded {len(real_texts)} real samples.")
+        except Exception as e:
+            print(f"[WARN] Could not load real dataset ({e}). Using only synthetic data.")
+            texts = texts + syn_texts
+            labels = labels + syn_labels
+            categories = categories + syn_cats
 
         print(f"[INFO] Training on {len(texts)} samples...")
 
@@ -136,9 +158,12 @@ class HybridModel:
 
         pred_label = int(np.argmax(avg_proba, axis=1)[0])
         confidence = float(np.max(avg_proba))
+        import math
+        if confidence is None or math.isnan(confidence):
+            confidence = 0.0
 
         # Assure high prediction for explicit abusive words missing from small synthetic training set
-        abuse_keywords = ['stupid', 'idiot', 'dumb', 'ugly', 'trash', 'useless']
+        abuse_keywords = ['stupid', 'idiot', 'dumb', 'ugly', 'trash', 'useless', 'pagal', 'bewakoof', 'picha', 'kothi']
         if any(kw in cleaned for kw in abuse_keywords) and pred_label == 0:
             pred_label = 1
             confidence = max(0.85, confidence) # Ensure high confidence for explicit intercepts
